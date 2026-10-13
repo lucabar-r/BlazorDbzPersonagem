@@ -1,0 +1,72 @@
+﻿@page "/"
+@using System.Net.Http.Json
+@using BlazorDbzPersonagem.Models
+@inject HttpClient Http
+
+<PageTitle>BlazorDragonBall</PageTitle>
+
+<h3>Informações do Personagem</h3>
+
+<div style="margin-bottom: 20px;">
+    <label for="inputId">ID do Personagem: </label>
+    <input id="inputId" @bind="personagemId" type="number" min="1" style="width: 60px;" />
+    <button @onclick="BuscarPersonagem">Procurar</button>
+</div>
+
+@if (carregando)
+{
+    <p>A carregar dados da API...</p>
+}
+else if (personagem != null)
+{
+    <div>
+        <p><strong>Nome:</strong> @personagem.Name</p>
+        <p><strong>Planeta de Origem:</strong> @personagem.OriginPlanet?.Name</p>
+        <p><strong>Transformações:</strong></p>
+        @if (personagem.Transformations != null && personagem.Transformations.Any())
+        {
+            <ul>
+                @foreach (var trans in personagem.Transformations)
+                {
+                    <li>@personagem.Name @trans.Name</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>Nenhuma transformação encontrada.</p>
+        }
+    </div>
+}
+else if (erro)
+{
+    <p style="color: red;">Ocorreu um erro ou o personagem não foi encontrado.</p>
+}
+
+@code {
+    private int personagemId = 1;
+    private Personagem? personagem;
+    private bool carregando = false;
+    private bool erro = false;
+
+    private async Task BuscarPersonagem()
+    {
+        carregando = true;
+        erro = false;
+        personagem = null;
+
+        try
+        {
+            // Consumo do endpoint dinâmico com o ID do personagem
+            personagem = await Http.GetFromJsonAsync<Personagem>($"https://dragonball-api.com/api/characters/{personagemId}");
+        }
+        catch
+        {
+            erro = true;
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+}
